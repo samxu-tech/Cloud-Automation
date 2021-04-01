@@ -1,0 +1,30 @@
+node {
+
+    stage('Pull source code') {
+       cleanWs()
+       sh 'git clone git@github.com:samxu-tech/Cloud-Automation.git'
+
+    }
+    dir('Cloud-Automation/APIM/Helmchart/') {
+
+        //构建 Helm chart
+
+            stage('build and upload helm chart'){
+                sh '''
+                helm package ./amplify-apim-7.7 --version 0.1.${BUILD_NUMBER}
+                curl -uadmin:Axway123! -T amplify-apim-7.7-0.1.${BUILD_NUMBER}.tgz "http://art.local:8081/artifactory/helm/amplify-apim-7.7-0.1.${BUILD_NUMBER}.tgz"
+                '''
+            }
+
+        //Deploy notebook service into Kubernetes by Helm chart.
+        stage('Deploy apim chart into Kubernetes'){
+//             sh '''
+//             helm repo update
+//             helm install apim-7.7 helm/amplify-apim-7.7 --namespace dev
+//             sleep 20
+//             '''
+        }
+
+    }
+
+ }

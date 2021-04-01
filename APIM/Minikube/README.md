@@ -122,12 +122,17 @@ AMPLIFY API-Management solution has been deployed on minikube 1.16 installed on 
     ```
     
     You should have ingress-nginx-controller at running state.
+   
+    check the minikube addons
+   ```bash
+    minikube addons list
+   ```
 
 5. Install a certificat manager
 
     Execute the following command to install cert-manager :
     ```bash
-    kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.16.1/cert-manager.yaml
+    kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v1.1.1/cert-manager.yaml
     ```
     
     Check cert-manager is correctly running :
@@ -172,12 +177,39 @@ AMPLIFY API-Management solution has been deployed on minikube 1.16 installed on 
     NAME                    CHART VERSION   APP VERSION     DESCRIPTION
     axway/amplify-apim-7.7  1.2.0           7.7-*           Package for demo instance of Axway AMPLIFY API ...  
     ```
-
+   
+   因为axway chart repo更新慢，现将源代码下载下来，更新到本地jfrog jcr helm 仓库：
+   https://github.com/samxu-tech/Cloud-Automation/tree/master/APIM/Helmchart
+   
+   在Jenkins服务器http://18.166.217.11:8080/
+   运行pipeline: apim-helmchart
+   
+   然后在k8s服务器，更新并获取helmchart
+   
+   将helm chart获取到本地
+   ubuntu@ip-172-31-6-168:~/helm/charts$ helm repo ls
+   NAME            URL                                        
+   helm-prod       http://art.local:8081/artifactory/helm-prod
+   helm            http://art.local:8081/artifactory/helm  
+   
+   ubuntu@ip-172-31-6-168:~/helm/charts$ helm repo update
+   Hang tight while we grab the latest from your chart repositories...
+   ...Successfully got an update from the "helm-prod" chart repository
+   ...Successfully got an update from the "helm" chart repository
+   Update Complete. ⎈Happy Helming!⎈
+   
+   ubuntu@ip-172-31-6-168:~/helm/charts$ cd /home/ubuntu/helm/charts
+   ubuntu@ip-172-31-6-168:~/helm/charts$ helm fetch helm/apim-7.7 --untar
+   
+   ubuntu@ip-172-31-6-168:~/helm/charts$ ls
+   amplify-apim-7.7  apim-old  foo  notebook
+   
 7. Deploy APIM using HELM.
+    
 
     Execute the following command to deploy with minimal parameters :
     ```bash
-    helm install <HELM_RELEASE_NAME> axway/amplify-apim-7.7 --set global.domainName=kube.local.com,apitraffic.replicaCount=1
+    helm install amplify-apim-7.7 ./amplify-apim-7.7 --set global.domainName=kube.local.com,apitraffic.replicaCount=1 -n dev
     ```
 
     Expected output example :
@@ -268,6 +300,14 @@ AMPLIFY API-Management solution has been deployed on minikube 1.16 installed on 
     ```
 
 ## Troubleshooting
+
+ubuntu@ip-172-31-6-168:~/helm/charts$ kubectl get pods -n dev
+
+ubuntu@ip-172-31-6-168:~/helm/charts$ kubectl describe pods -n dev
+
+ubuntu@ip-172-31-6-168:~/helm/charts$ kubectl get deployment -n dev
+
+
 
 ### ImagePullBackOff
 If you have a "ImagePullBackOff" error when executing "kubectl get po -A" command :
