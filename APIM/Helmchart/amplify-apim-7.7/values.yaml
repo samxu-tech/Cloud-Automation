@@ -5,7 +5,7 @@
 
 global:
    # AZURE, OPENSHIFT, MINIKUBE
-   platform: "MINIKUBE"
+   platform: ""
    # Define is managed service must be used for specific cloud provider. Doesn't work for Openshift and minikube.
    managedIngress: false
 
@@ -26,7 +26,7 @@ global:
       enable: false
       dbName: "apimpool"
       apimName: "apimpool"
-   enableDynamicLicense: false
+   enableDynamicLicense: true
    emtDeployment: "true"
    customStorageClass:
       scrwo:
