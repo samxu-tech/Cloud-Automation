@@ -143,9 +143,10 @@ spec:
       - name: events
         persistentVolumeClaim:
           claimName: apigw-events
-      terminationGracePeriodSeconds: 100
       {{- if eq .Values.global.enableDynamicLicense true }}
       - name: config-license
         configMap:
           name: apim-config
       {{- end }}
+      terminationGracePeriodSeconds: 100
+
