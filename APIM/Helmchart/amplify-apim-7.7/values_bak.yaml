@@ -19,9 +19,9 @@ global:
    domainName: ""
    dockerRegistry:
       secret: "registry-secret"
-      url: "axwayproductsdemo.azurecr.io"
-      username: "apim-demo"
-      token: "WXLOkIcYitqJZGiKJ65wqBydlM+klvM8"
+      url: "art.local:8081/docker-local/apim"
+      username: "admin"
+      token: "AKCp8ihpX9hncuivLQFfYpTHc396kyC2ea2fBTXm9MLKBYDNJwWcPNARfJVxgRN2TVJfNEw7q"
    nodeAffinity:
       enable: false
       dbName: "apimpool"
@@ -35,7 +35,7 @@ global:
 
 anm:
    name: anm
-   buildTag: "20210130"
+   buildTag: "20200730"
    imageName: "apim-anm-7.7"
    ingressName: "anm"
    replicaCount: 1
@@ -50,7 +50,7 @@ anm:
 
 apimgr:
    name: apimgr
-   buildTag: "20210130"
+   buildTag: "20200730"
    imageName: "apim-gtw-7.7"
    ingressName: "api-mgr"
    replicaCount: 1
@@ -64,7 +64,7 @@ apimgr:
 
 apitraffic:
    name: traffic
-   buildTag: "20210130"
+   buildTag: "20200730"
    imageName: "apim-gtw-7.7"
    ingressName: "api"
    portManager: 8065
