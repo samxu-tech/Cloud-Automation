@@ -11,7 +11,7 @@ global:
 
    #Annotation
 
-   pullPolicy: Always
+   pullPolicy: IfNotPresent
    initImageTag: "busybox:1.33"
    updateStrategy: "RollingUpdate"
    editor: "Axway"
@@ -19,9 +19,9 @@ global:
    domainName: ""
    dockerRegistry:
       secret: "registry-secret"
-      url: "axwayproductsdemo.azurecr.io"
-      username: "apim-demo"
-      token: "WXLOkIcYitqJZGiKJ65wqBydlM+klvM8"
+      url: "art.local:8081/docker-local/apim"
+      username: "admin"
+      token: "AKCp8ihpX9hncuivLQFfYpTHc396kyC2ea2fBTXm9MLKBYDNJwWcPNARfJVxgRN2TVJfNEw7q"
    nodeAffinity:
       enable: false
       dbName: "apimpool"
@@ -35,13 +35,14 @@ global:
 
 anm:
    name: anm
-   buildTag: "20210130"
+   buildTag: "20200730"
    imageName: "apim-anm-7.7"
    ingressName: "anm"
    replicaCount: 1
    pvcQuota: 1
    trafficPort: 8090
    trafficPortUI: 8091
+   portGateway: 8080
    logTraceToFile: "true"
    logTraceJSONtoSTDOUT: "false"
    emt_heap_size_mb: "1024"
@@ -50,11 +51,12 @@ anm:
 
 apimgr:
    name: apimgr
-   buildTag: "20210130"
+   buildTag: "20200730"
    imageName: "apim-gtw-7.7"
    ingressName: "api-mgr"
    replicaCount: 1
    trafficPort: 8075
+   portGateway: 8080
    logTraceToFile: "true"
    logTraceJSONtoSTDOUT: "false"
    logOpenTrafficOutput: "stdout"
@@ -64,7 +66,7 @@ apimgr:
 
 apitraffic:
    name: traffic
-   buildTag: "20210130"
+   buildTag: "20200730"
    imageName: "apim-gtw-7.7"
    ingressName: "api"
    portManager: 8065
