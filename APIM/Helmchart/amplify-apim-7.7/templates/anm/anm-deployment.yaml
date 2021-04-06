@@ -79,8 +79,8 @@ spec:
             - name: k8sprobe
               value: liveness.{{ .Values.anm.name }}
             path: /healthcheck
-            port: {{ .Values.anm.trafficPortUI }}
-            scheme: HTTPS
+            port: {{ .Values.anm.portGateway }}
+            scheme: HTTP
           initialDelaySeconds: 40
           periodSeconds: 30
           failureThreshold: 5
@@ -90,8 +90,8 @@ spec:
             - name: k8sprobe
               value: readiness.{{ .Values.anm.name }}
             path: /healthcheck
-            port: {{ .Values.anm.trafficPortUI }}
-            scheme: HTTPS
+            port: {{ .Values.anm.portGateway }}
+            scheme: HTTP
           initialDelaySeconds: 30
           periodSeconds: 10
           failureThreshold: 6

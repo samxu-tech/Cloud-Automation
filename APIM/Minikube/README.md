@@ -199,18 +199,19 @@ AMPLIFY API-Management solution has been deployed on minikube 1.16 installed on 
    Update Complete. ⎈Happy Helming!⎈
    
    ubuntu@ip-172-31-6-168:~/helm/charts$ cd /home/ubuntu/helm/charts
-   ubuntu@ip-172-31-6-168:~/helm/charts$ helm fetch helm/apim-7.7 --untar
+   ubuntu@ip-172-31-6-168:~/helm/charts$ helm fetch helm/amplify-apim-7.7 --untar
    
    ubuntu@ip-172-31-6-168:~/helm/charts$ ls
    amplify-apim-7.7  apim-old  foo  notebook
    
 7. Deploy APIM using HELM.
-    
+    kubectl create namespace dev
 
     Execute the following command to deploy with minimal parameters :
     ```bash
-    helm install amplify-apim-7.7 ./amplify-apim-7.7 --set global.domainName=kube.local.com,apitraffic.replicaCount=1 -n dev
+    helm install amplify-apim-7.7 ./amplify-apim-7.7 --set global.domainName=kube.local.com,apitraffic.replicaCount=1 -n apim
     ```
+    helm upgrade amplify-apim-7.7 ./amplify-apim-7.7 --reuse-values --set dynamicLicense=true -n apim2
 
     Expected output example :
     ```bash
@@ -278,13 +279,17 @@ AMPLIFY API-Management solution has been deployed on minikube 1.16 installed on 
     If you want to delete APIM from Minikube, you can execute the following command :
     ```bash
     helm uninstall <HELM_RELEASE_NAME>
+    ubuntu@ip-172-31-6-168:~/helm/charts$ helm uninstall amplify-apim-7.7 -n dev
     ```
 
     Expected output example
     ```bash
     release "<HELM_RELEASE_NAME>" uninstalled
     ```
-
+    Delete namespace:
+    ```bash
+    kubectl delete namespaces dev
+    ```
 10. Stop Minikube
 
     If you want to stop minikube, you can execute the following command :
@@ -307,6 +312,22 @@ ubuntu@ip-172-31-6-168:~/helm/charts$ kubectl describe pods -n dev
 
 ubuntu@ip-172-31-6-168:~/helm/charts$ kubectl get deployment -n dev
 
+### 0/1 nodes are available: 1 pod has unbound immediate PersistentVolumeClaims. 
+ubuntu@ip-172-31-6-168:~/helm/charts$ kubectl get pvc -n dev
+NAME                         STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+apigw-events                 Bound    pvc-8120a975-6aa6-43bc-a89d-6fce3e2b30c9   1Gi        RWX            standard       54m
+cassandra-data-cassandra-0   Bound    pvc-89f46ab8-b961-4deb-ac08-02bd99d7ebcf   2Gi        RWO            standard       54m
+mysql-analytics-pvc          Bound    pvc-e45186e2-0810-4cf4-8161-2366c54d2570   10Gi       RWO            standard       54m
+
+ubuntu@ip-172-31-6-168:~/helm/charts$ kubectl get pvc apigw-events -n dev
+NAME           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+apigw-events   Bound    pvc-8120a975-6aa6-43bc-a89d-6fce3e2b30c9   1Gi        RWX            standard       57m
+ubuntu@ip-172-31-6-168:~/helm/charts$ kubectl get pvc cassandra-data-cassandra-0 -n dev
+NAME                         STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+cassandra-data-cassandra-0   Bound    pvc-89f46ab8-b961-4deb-ac08-02bd99d7ebcf   2Gi        RWO            standard       57m
+ubuntu@ip-172-31-6-168:~/helm/charts$ kubectl get pvc mysql-analytics-pvc -n dev
+NAME                  STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+mysql-analytics-pvc   Bound    pvc-e45186e2-0810-4cf4-8161-2366c54d2570   10Gi       RWO            standard       57m
 
 
 ### ImagePullBackOff
@@ -397,3 +418,33 @@ Exepected output :
 warning: Immediate deletion does not wait for confirmation that the running resource has been terminated. The resource may continue to run on the cluster indefinitely.
 pod "cassandra-0" force deleted
 ```
+
+参考命令：
+
+helm upgrade amplify-apim-7.7 ./amplify-apim-7.7 --reuse-values --set global.enableDynamicLicense=true -n apim2
+
+kubectl get po  -n apim -o wide
+
+kubectl describe po apimgr-6df7d877b5-828dw -n apim
+
+ubuntu@ip-172-31-6-168:~/helm/charts$ kubectl logs  apimgr-6df7d877b5-828dw  -n apim2
+Launching API Gateway in EMT mode...
+Setting Java heap size to 1024 MB
+cannot add license file /opt/Axway/apigateway/conf/licenses/lic.lic to set: license expired at Wed, 31 Mar 2021 17:19:09 GMT, time now Sat, 03 Apr 2021 09:07:17 GMT
+NO PRODUCT LICENSE FOUND in /opt/Axway/apigateway/conf/licenses
+Host details:
+host.name=apimgr-6df7d877b5-828dw, net.hw=02:42:ac:11:00:0b, net.inet=172.17.0.11, version=7, version=7.7
+Needs a valid license to run, shutting down...
+
+helm install --dry-run --debug  amplify-apim-7.7 ./amplify-apim-7.7
+
+helm upgrade amplify-apim-7.7 ./amplify-apim-7.7 -n apim
+
+helm uninstall amplify-apim-7.7 -n apim
+
+
+helm repo update
+helm fetch helm/amplify-apim-7.7 --untar
+
+
+helm install amplify-apim-7.7 ./amplify-apim-7.7 --set global.domainName=kube.local.com,apitraffic.replicaCount=1 -n apim

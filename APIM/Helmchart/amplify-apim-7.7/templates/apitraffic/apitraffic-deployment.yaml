@@ -122,8 +122,8 @@ spec:
             - name: k8sprobe
               value: readiness.{{ .Values.apitraffic.name }}
             path: /healthcheck
-            port: {{ .Values.apitraffic.portManager }}
-            scheme: HTTPS
+            port: {{ .Values.apitraffic.portGateway }}
+            scheme: HTTP
           initialDelaySeconds: 40
           periodSeconds: 30
           failureThreshold: 5
@@ -133,8 +133,8 @@ spec:
             - name: k8sprobe
               value: liveness.{{ .Values.apitraffic.name }}
             path: /healthcheck
-            port: {{ .Values.apitraffic.portManager }}
-            scheme: HTTPS
+            port: {{ .Values.apitraffic.portGateway }}
+            scheme: HTTP
           initialDelaySeconds: 30
           periodSeconds: 30
           failureThreshold: 5
@@ -156,7 +156,7 @@ spec:
         command: ['sh', '-c', 'until nc -w 3 -v {{ .Values.anm.name }} 8090; do echo waiting for anm; sleep 2; done;']
       - name: init-apimanager
         image: {{ .Values.global.initImageTag }}
-        command: ['sh', '-c', 'until nc -w 3 -v {{ .Values.apimgr.name }} 8075; do echo waiting for mgmt; sleep 2; done;']
+        command: ['sh', '-c', 'until nc -w 3 -v {{ .Values.apimgr.name }} 8080; do echo waiting for mgmt; sleep 2; done;']
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler

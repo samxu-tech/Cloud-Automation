@@ -89,8 +89,8 @@ spec:
             - name: k8sprobe
               value: readiness.{{ .Values.apimgr.name }}
             path: /healthcheck
-            port: {{ .Values.apimgr.trafficPort }}
-            scheme: HTTPS
+            port: {{ .Values.apimgr.portGateway }}
+            scheme: HTTP
           initialDelaySeconds: 50
           periodSeconds: 15
           failureThreshold: 10
@@ -100,8 +100,8 @@ spec:
             - name: k8sprobe
               value: liveness.{{ .Values.apimgr.name }}
             path: /healthcheck
-            port: {{ .Values.apimgr.trafficPort }}
-            scheme: HTTPS
+            port: {{ .Values.apimgr.portGateway }}
+            scheme: HTTP
           initialDelaySeconds: 30
           periodSeconds: 30
           failureThreshold: 5
