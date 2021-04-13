@@ -73,28 +73,6 @@ spec:
           requests:
             memory: "1Gi"
             cpu: "250m" 
-        livenessProbe:
-          httpGet:
-            httpHeaders:
-            - name: k8sprobe
-              value: liveness.{{ .Values.anm.name }}
-            path: /healthcheck
-            port: {{ .Values.anm.trafficPort }}
-            scheme: HTTP
-          initialDelaySeconds: 40
-          periodSeconds: 30
-          failureThreshold: 5
-        readinessProbe:
-          httpGet:
-            httpHeaders:
-            - name: k8sprobe
-              value: readiness.{{ .Values.anm.name }}
-            path: /healthcheck
-            port: {{ .Values.anm.trafficPort }}
-            scheme: HTTP
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          failureThreshold: 6
         lifecycle:
           preStop:
             exec:

@@ -11,7 +11,7 @@ global:
 
    #Annotation
 
-   pullPolicy: IfNotPresent
+   pullPolicy: Always
    initImageTag: "busybox:1.33"
    updateStrategy: "RollingUpdate"
    editor: "Axway"
@@ -42,7 +42,6 @@ anm:
    pvcQuota: 1
    trafficPort: 8090
    trafficPortUI: 8091
-   portGateway: 8080
    logTraceToFile: "true"
    logTraceJSONtoSTDOUT: "false"
    emt_heap_size_mb: "1024"

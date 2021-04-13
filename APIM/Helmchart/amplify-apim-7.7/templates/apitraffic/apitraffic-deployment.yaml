@@ -156,7 +156,7 @@ spec:
         command: ['sh', '-c', 'until nc -w 3 -v {{ .Values.anm.name }} 8090; do echo waiting for anm; sleep 2; done;']
       - name: init-apimanager
         image: {{ .Values.global.initImageTag }}
-        command: ['sh', '-c', 'until nc -w 3 -v {{ .Values.apimgr.name }} 8080; do echo waiting for mgmt; sleep 2; done;']
+        command: ['sh', '-c', 'until nc -w 3 -v {{ .Values.apimgr.name }} 8075; do echo waiting for mgmt; sleep 2; done;']
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler

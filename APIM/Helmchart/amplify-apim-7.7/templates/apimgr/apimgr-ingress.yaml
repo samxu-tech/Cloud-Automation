@@ -39,5 +39,5 @@ spec:
       - backend:
           serviceName: {{ .Values.apimgr.name }}
           servicePort: {{ .Values.apimgr.trafficPort }}
-        path: /
+        path: /apimanager
 {{- end }}
