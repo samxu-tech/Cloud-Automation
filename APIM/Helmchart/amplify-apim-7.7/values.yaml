@@ -11,7 +11,7 @@ global:
 
    #Annotation
 
-   pullPolicy: Always
+   pullPolicy: IfNotPresent
    initImageTag: "busybox:1.33"
    updateStrategy: "RollingUpdate"
    editor: "Axway"
