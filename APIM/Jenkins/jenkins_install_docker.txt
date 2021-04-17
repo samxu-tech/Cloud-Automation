@@ -1,0 +1,340 @@
+
+# 部署 1：jenkins环境部署：
+
+使用下面的命令拉取jenkins的docker镜像，这里我是用的是lts的长期支持版本，你可以到jenkins官网自由选择其他版本
+sudo docker pull jenkins/jenkins:lts
+配置宿主机映射到容器的目录，之后jenkins的一些配置文件都将会存储到该目录下，这个目录可以自己定，但是我建议遵守我这样的规范，便于日后查找和管理
+sudo mkdir /home/ubuntu/dockerPersistence/jenkins_home            # 创建jenkins_home目录
+sudo chown -R 1000:1000 /home/ubuntu/dockerPersistence/jenkins_home      #设置该目录的所有者和所属的组
+启动jenkins的docker镜像，并设置相关参数，参数解释：
+-d 表示以后台模式运行
+--name 为容器定义一个名字（后面可以代替容器id使用）
+-p 表示映射容器的端口到宿主机的端口
+-v 表示映射宿主机的目录到容器的目录
+-u root 使用root用户运行，避免后面出现的一些执行权限问题
+-v /home/ubuntu/dockerPersistence/jenkins_home:/var/jenkins_home 映射jenkins_home，将数据存储到宿主机，这样配置就不会随容器丢失
+-v /var/run/docker.sock:/var/run/docker.sock 与 -v /usr/bin/docker:/usr/bin/docker 把宿主机docker 映射到容器内，可以直接在容器内使用宿主机docker
+-v /usr/lib/x86_64-linux-gnu/libltdl.so.7:/usr/lib/x86_64-linux-gnu/libltdl.so.7 \ 容器内docker运行需要的库文件
+-v /opt:/opt \ 自主安装的一些运行时软件（如java/maven/git...）
+-v /etc/timezone:/etc/timezone 映射时区文件，保证容器的时区和宿主机相同（官网的jenkins容器时区不是中国的时区）
+最后的jenkins/jenkins:lts是要启动的镜像
+sudo docker run -d --name jenkins -p 8080:8080 -p 50000:50000 -u root \
+  -v /home/ubuntu/dockerPersistence/jenkins_home:/var/jenkins_home \
+  -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker \
+  -v /usr/lib/x86_64-linux-gnu/libltdl.so.7:/usr/lib/x86_64-linux-gnu/libltdl.so.7 \
+  -v /etc/timezone:/etc/timezone jenkins/jenkins:lts
+
+容器启动后，就可以访问ip:8080看到jenkins首次运行的首页了，然后通过下面命令查看初始密码，填入之后跳转到安装插件的页面，选择第一个就好，会默认安装一些插件
+sudo cat /home/jenkins_home/secrets/initialAdminPassword
+跳转到创建用户和密码的界面，创建好后，jenkins的安装也就到此结束了
+
+http://18.166.217.11:8080/
+创建管理员账户 sam/Axway123!
+
+链接：https://www.jianshu.com/p/9018cfa3654b
+
+
+
+# 部署 2：配置jenkins环境可以访问github账户：
+
+步骤1 进入docker中的jenkins
+
+ubuntu@ip-172-31-39-246:~$ docker exec -it 0d5b7318cc14 /bin/bash
+
+步骤2 进入 ～/.ssh目录，删除目录的所有内容，然后执行命令
+
+ssh-keygen
+
+顺序按回车，将目录中id_rsa.pub 公钥传到github中,https://github.com/settings/keys;   在ssh key中，新建立一个ssh key，将id_rsa.pub内容贴到里面。
+
+步骤3： 先在docker主机测试一下，选择yes将远程主机添加到本地。
+
+root@0d5b7318cc14:~# mkdir test
+root@0d5b7318cc14:~# cd test/
+root@0d5b7318cc14:~/test# git clone git@github.com:samxu-tech/WEBINAR-SIMPLIFYDEVOPS.git
+Cloning into 'WEBINAR-SIMPLIFYDEVOPS'...
+The authenticity of host 'github.com (52.74.223.119)' can't be established.
+RSA key fingerprint is SHA256:nThbg6kXUpJWGl7E1IGOCspRomTxdCARLviKw6E5SY8.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added 'github.com,52.74.223.119' (RSA) to the list of known hosts.
+remote: Enumerating objects: 118, done.
+remote: Counting objects: 100% (118/118), done.
+remote: Compressing objects: 100% (68/68), done.
+remote: Total 118 (delta 68), reused 88 (delta 41), pack-reused 0
+Receiving objects: 100% (118/118), 15.83 KiB | 15.83 MiB/s, done.
+Resolving deltas: 100% (68/68), done.
+
+步骤4 新建Pipeline 流水线项目 example，在项目中配置，
+
+node {
+
+    stage('Pull source code') {
+       sh'git clone git@github.com:samxu-tech/WEBINAR-SIMPLIFYDEVOPS.git'
+
+    }
+}
+
+点击保存，然后点击立即构建。
+
+测试第二种写法：
+node {
+
+    stage('Pull source code') {
+       git 'git@github.com:samxu-tech/WEBINAR-SIMPLIFYDEVOPS.git'
+
+    }
+}
+点击保存，然后点击立即构建。
+
+root@0d5b7318cc14:/etc# apt-get update
+root@0d5b7318cc14:/etc# apt-get install vim
+root@0d5b7318cc14:/etc# vi /etc/profile
+
+添加下面内容：
+export MAVE_HOME=/opt/maven/apache-maven-3.6.3
+export CLASSPATH=$CLASSPATH:$MAVE_HOME/lib
+export PATH=$PATH:$MAVE_HOME/bin
+
+生效：
+root@0d5b7318cc14:/etc# source /etc/profile
+
+
+ln -s /opt/maven/apache-maven-3.6.3/bin/mvn /usr/bin/mvn
+
+
+# 部署 3：部署JFrog artifactory-oss：
+JFrog:
+在.bashrc里添加
+export JFROG_HOME=/home/ubuntu/dockerPersistence/jfrog_home
+
+
+ubuntu@ip-172-31-39-246:~/dockerPersistence/jfrog_home$ mkdir artifactory
+ubuntu@ip-172-31-39-246:~/dockerPersistence/jfrog_home$ cd ..
+ubuntu@ip-172-31-39-246:~/dockerPersistence$ sudo chown -R 1030:1030 jfrog_home
+
+docker run --name artifactory-oss-6.23.13 -d -v $JFROG_HOME/artifactory:/var/opt/jfrog/artifactory  -p 8083:8081 docker.bintray.io/jfrog/artifactory-oss:6.23.13
+
+验证：
+ubuntu@ip-172-31-39-246:~/dockerPersistence/jfrog_home/artifactory$ docker ps -a
+CONTAINER ID   IMAGE                                             COMMAND                  CREATED         STATUS                  PORTS                                              NAMES
+b341cddde4ba   docker.bintray.io/jfrog/artifactory-oss:6.23.13   "/entrypoint-artifac…"   4 seconds ago   Up 3 seconds            0.0.0.0:8083->8081/tcp                             artifactory-oss-6.23.13
+0d5b7318cc14   jenkins/jenkins:lts                               "/sbin/tini -- /usr/…"   3 hours ago     Up 25 minutes           0.0.0.0:8080->8080/tcp, 0.0.0.0:50000->50000/tcp   jenkins
+0ff09f1a310d   hello-world                                       "/hello"                 2 days ago      Exited (0) 2 days ago                                                      competent_goldwasser
+ubuntu@ip-172-31-39-246:~/dockerPersistence/jfrog_home/artifactory$ netstat -an | grep 8083
+tcp        0      0 0.0.0.0:8083            0.0.0.0:*               LISTEN  
+ 
+
+初始化：
+http://18.166.217.11:8083
+默认用户：admin/password
+
+修改密码：
+admin/Axway123!
+在admin用户，settings->Authentication Settings->API Key,生成admin用户的APIKey: AKCp8ihfAefZT2SoiV1W5mtgKQfnwkthv4H2nwSA5v6hPhXHNtSHAyM3Puhikx3HxbB91qtMc
+
+## 部署 4：Docker 部署 sonarqube
+
+```
+docker pull library/sonarqube:7.9.3-community
+docker run -d -p 9000:9000 sonarqube:7.9.3-community
+ubuntu@ip-172-31-39-246:~$ netstat -an | grep 9000
+tcp        0      0 0.0.0.0:9000            0.0.0.0:*               LISTEN  
+```
+访问：http://18.166.217.11:9000/
+admin/admin
+
+创建项目notebook-service,
+为项目创建token: 名称jenkins
+jenkins: 9ecf5aed298390e2a9a4202f413d338ef43646ca
+
+选择-java-maven，自动生成调用脚本
+mvn sonar:sonar \
+  -Dsonar.projectKey=notebook-service \
+  -Dsonar.host.url=http://18.166.217.11:9000 \
+  -Dsonar.login=9ecf5aed298390e2a9a4202f413d338ef43646ca
+
+
+# 部署 4：在Jenkins docker容器里，配置maven的settings.xml：
+
+步骤1 进入docker中的jenkins
+
+ubuntu@ip-172-31-39-246:~$ docker exec -it 0d5b7318cc14 /bin/bash
+
+步骤2 进入 ～/.m2目录
+在浏览器访问http://18.166.217.11:8083
+
+Artifact Repository里找到libs-release,点击set Me up，然后Generate Maven Settings，将生成的settings.xml 下载下来，替换里面的用户名和密码， 放入到容器里～/.m2目录，settings.xml文件如下：
+
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.1.0 http://maven.apache.org/xsd/settings-1.1.0.xsd" xmlns="http://maven.apache.org/SETTINGS/1.1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <servers>
+    <server>
+      <username>admin</username>
+      <password>Axway123!</password>
+      <id>central</id>
+    </server>
+    <server>
+      <username>admin</username>
+      <password>Axway123!</password>
+      <id>snapshots</id>
+    </server>
+  </servers>
+
+  <profiles>
+    <profile>
+      <repositories>
+        <repository>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+          <id>central</id>
+          <name>libs-release</name>
+          <url>http://18.166.217.11:8083/artifactory/libs-release</url>
+        </repository>
+        <repository>
+          <snapshots />
+          <id>snapshots</id>
+          <name>libs-snapshot</name>
+          <url>http://18.166.217.11:8083/artifactory/libs-snapshot</url>
+        </repository>
+      </repositories>
+      <pluginRepositories>
+        <pluginRepository>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+          <id>central</id>
+          <name>libs-release</name>
+          <url>http://18.166.217.11:8083/artifactory/libs-release</url>
+        </pluginRepository>
+        <pluginRepository>
+          <snapshots />
+          <id>snapshots</id>
+          <name>libs-snapshot</name>
+          <url>http://18.166.217.11:8083/artifactory/libs-snapshot</url>
+        </pluginRepository>
+      </pluginRepositories>
+      <id>artifactory</id>
+    </profile>
+  </profiles>
+  <activeProfiles>
+    <activeProfile>artifactory</activeProfile>
+  </activeProfiles>
+</settings>
+
+# 部署 5：在Jenkins 里安装插件：
+SonarQube Scanner 
+Artifactory Plugin
+
+在Jenkins->system setting里，配置Artifactory servers，SonarQube servers地址
+
+# 部署 5：在Jenkins 里创建pipeline，进行测试：
+
+node {
+
+    stage('Pull source code') {
+       cleanWs()
+       sh 'pwd'
+       sh 'git clone git@github.com:samxu-tech/Notebook-k8s.git'
+       
+    }
+    dir('Notebook-k8s/Chapter-6/notebook-service') {
+        //Maven 构建，制品上传到 Artifactory
+        stage('Maven build'){
+            def server = Artifactory.newServer url: "http://18.166.217.11:8083/artifactory", credentialsId: 'art-oss-cred'
+            def rtMaven = Artifactory.newMavenBuild()
+
+            rtMaven.tool = 'maven' // Tool name from Jenkins configuration
+            rtMaven.deployer releaseRepo: 'libs-release-local', snapshotRepo: 'libs-snapshot-local', server: server
+
+            //收集构建信息
+            def buildInfo = Artifactory.newBuildInfo()
+            // server.publishBuildInfo buildInfo
+            rtMaven.run pom: 'pom.xml', goals: 'deploy -Dmaven.test.skip=true', buildInfo: buildInfo
+
+            server.publishBuildInfo buildInfo
+        }
+
+        //启动 Sonarqube 代码静态扫描
+        stage('Code scanning and get result'){
+         sh '''
+            echo 'Code scanning and get result'
+         '''
+
+        }
+
+        //启动 YAPI 接口测试
+        stage('API Testing'){
+         sh '''
+            echo 'API Testing'
+         '''
+        }
+
+        //启动 Selenium UI 自动化测试
+        stage('Maven UI Testing'){
+            sh '''
+                echo 'Maven UI Testing'
+            '''
+        }
+
+    }
+
+ }
+
+
+
+# 部署方式 2： Kubernetes 部署
+
+## 2.1 配置免费本地 Docker 镜像中心 JFrog Container Registry 
+	
+1. 创建$JFROG_HOME环境变量。
+    
+```
+export $JFROG_HOME=/home/ubuntu/dockerPersistence/jfrog_home
+```
+2. 创建 JCR 工作目录	
+```
+mkdir ~/jfrog-home
+export JFROG_HOME=~/jfrog-home
+
+mkdir -p $JFROG_HOME/artifactory-jcr/var/etc/
+cd $JFROG_HOME/artifactory-jcr/var/etc/
+touch ./system.yaml
+chown -R 777 $JFROG_HOME/artifactory-jcr/var
+	
+```
+3. 启动镜像仓库 JCR
+
+```
+docker run -d -m 2000m --name  artifactory-jcr-v7  -v $JFROG_HOME/artifactory-jcr/var:/var/opt/jfrog/artifactory -p 8081:8081 -p 8082:8082 docker.bintray.io/jfrog/artifactory-jcr:7.4.3
+```
+
+4. 登录
+http://18.166.217.11:8082/ui/login/
+用户名：admin
+密码：password
+
+```
+docker login art.local:8081 -uadmin -pAxway123!
+```
+
+5. 配置 docker 服务：
+File sharing 增加:
+```
+/var/opt/jfrog/jcr
+/var/jenkins_home
+```
+Insecure Registry：
+```
+art.local:8081
+```
+
+Registry Mirror:
+
+`https://registry.docker-cn.com
+ http://hub-mirror.c.163.com`
+
+
+
+
